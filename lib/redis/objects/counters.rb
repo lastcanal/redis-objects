@@ -19,7 +19,7 @@ class Redis
 
         # Define a new counter.  It will function like a regular instance
         # method, so it can be used alongside ActiveRecord, DataMapper, etc.
-        def counter(name, options={})
+        def redis_counter(name, options={})
           options[:start] ||= 0
           options[:type]  ||= options[:start] == 0 ? :increment : :decrement
           redis_objects[name.to_sym] = options.merge(:type => :counter)

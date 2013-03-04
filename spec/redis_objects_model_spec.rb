@@ -5,30 +5,30 @@ require 'redis/objects'
 
 class Roster
   include Redis::Objects
-  counter :available_slots, :start => 10
-  counter :pitchers, :limit => :max_pitchers
-  counter :basic
-  hash_key :contact_information, :marshal_keys=>{'updated_at'=>true}
-  lock :resort, :timeout => 2
-  value :starting_pitcher, :marshal => true
-  list :player_stats, :marshal => true
-  set :outfielders, :marshal => true
-  sorted_set :rank
+  redis_counter :available_slots, :start => 10
+  redis_counter :pitchers, :limit => :max_pitchers
+  redis_counter :basic
+  redis_hash :contact_information, :marshal_keys=>{'updated_at'=>true}
+  redis_lock :resort, :timeout => 2
+  redis_value :starting_pitcher, :marshal => true
+  redis_list :player_stats, :marshal => true
+  redis_set :outfielders, :marshal => true
+  redis_sorted_set :rank
 
   # global class counters
-  counter :total_players_online, :global => true
-  set :all_players_online, :global => true
-  value :last_player, :global => true
+  redis_counter :total_players_online, :global => true
+  redis_set :all_players_online, :global => true
+  redis_value :last_player, :global => true
 
   # custom keys
-  counter :player_totals, :key => 'players/#{username}/total'
-  list :all_player_stats, :key => 'players:all_stats', :global => true
-  set :total_wins, :key => 'players:#{id}:all_stats'
-  value :my_rank, :key => 'players:my_rank:#{username}'
-  value :weird_key, :key => 'players:weird_key:#{raise}', :global => true
+  redis_counter :player_totals, :key => 'players/#{username}/total'
+  redis_list :all_player_stats, :key => 'players:all_stats', :global => true
+  redis_set :total_wins, :key => 'players:#{id}:all_stats'
+  redis_value :my_rank, :key => 'players:my_rank:#{username}'
+  redis_value :weird_key, :key => 'players:weird_key:#{raise}', :global => true
 
   #callable as key
-  counter :daily, :global => true, :key => Proc.new { |roster| "#{roster.name}:#{Time.now.strftime('%Y-%m-%dT%H')}:daily" }
+  redis_counter :daily, :global => true, :key => Proc.new { |roster| "#{roster.name}:#{Time.now.strftime('%Y-%m-%dT%H')}:daily" }
 
   def initialize(id=1) @id = id end
   def id; @id; end
@@ -43,8 +43,8 @@ end
 class CustomRoster < Roster
   include Redis::Objects
 
-  counter :basic # Override
-  counter :special # New
+  redis_counter :basic # Override
+  redis_counter :special # New
 end
 
 class MethodRoster
@@ -60,7 +60,7 @@ class CustomMethodRoster < MethodRoster
   include Redis::Objects
 
   attr_accessor :counter
-  counter :basic
+  redis_counter :basic
 end
 
 describe Redis::Objects do
@@ -846,49 +846,49 @@ describe Redis::Objects do
 
   it "should pick up class methods from superclass automatically" do
     CounterRoster = Class.new(Roster)
-    CounterRoster.counter :extended_counter
+    CounterRoster.redis_counter :extended_counter
     extended_roster = CounterRoster.new
     extended_roster.basic.should.be.kind_of(Redis::Counter)
     extended_roster.extended_counter.should.be.kind_of(Redis::Counter)
     @roster.respond_to?(:extended_counter).should == false
 
     HashKeyRoster = Class.new(Roster)
-    HashKeyRoster.hash_key :extended_hash_key
+    HashKeyRoster.redis_hash :extended_hash_key
     extended_roster = HashKeyRoster.new
     extended_roster.contact_information.should.be.kind_of(Redis::HashKey)
     extended_roster.extended_hash_key.should.be.kind_of(Redis::HashKey)
     @roster.respond_to?(:extended_hash_key).should == false
 
     LockRoster = Class.new(Roster)
-    LockRoster.lock :extended
+    LockRoster.redis_lock :extended
     extended_roster = LockRoster.new
     extended_roster.resort_lock.should.be.kind_of(Redis::Lock)
     extended_roster.extended_lock.should.be.kind_of(Redis::Lock)
     @roster.respond_to?(:extended_lock).should == false
 
     ValueRoster = Class.new(Roster)
-    ValueRoster.value :extended_value
+    ValueRoster.redis_value :extended_value
     extended_roster = ValueRoster.new
     extended_roster.starting_pitcher.should.be.kind_of(Redis::Value)
     extended_roster.extended_value.should.be.kind_of(Redis::Value)
     @roster.respond_to?(:extended_value).should == false
 
     ListRoster = Class.new(Roster)
-    ListRoster.list :extended_list
+    ListRoster.redis_list :extended_list
     extended_roster = ListRoster.new
     extended_roster.player_stats.should.be.kind_of(Redis::List)
     extended_roster.extended_list.should.be.kind_of(Redis::List)
     @roster.respond_to?(:extended_list).should == false
 
     SetRoster = Class.new(Roster)
-    SetRoster.set :extended_set
+    SetRoster.redis_set :extended_set
     extended_roster = SetRoster.new
     extended_roster.outfielders.should.be.kind_of(Redis::Set)
     extended_roster.extended_set.should.be.kind_of(Redis::Set)
     @roster.respond_to?(:extended_set).should == false
 
     SortedSetRoster = Class.new(Roster)
-    SortedSetRoster.sorted_set :extended_sorted_set
+    SortedSetRoster.redis_sorted_set :extended_sorted_set
     extended_roster = SortedSetRoster.new
     extended_roster.rank.should.be.kind_of(Redis::SortedSet)
     extended_roster.extended_sorted_set.should.be.kind_of(Redis::SortedSet)

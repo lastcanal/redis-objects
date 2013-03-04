@@ -48,8 +48,8 @@ begin
 
   class Post < ActiveRecord::Base
     include Redis::Objects
-    counter :total
-    counter :comments_count
+    redis_counter :total
+    redis_counter :comments_count
     belongs_to :blog, :counter_cache => true
   end
 

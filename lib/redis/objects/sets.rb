@@ -13,7 +13,7 @@ class Redis
       module ClassMethods
         # Define a new list.  It will function like a regular instance
         # method, so it can be used alongside ActiveRecord, DataMapper, etc.
-        def set(name, options={})
+        def redis_set(name, options={})
           redis_objects[name.to_sym] = options.merge(:type => :set)
           klass_name = '::' + self.name
           if options[:global]
